@@ -1,0 +1,7 @@
+C:\Development\GitHub\ClientsideRouteSpike\ClientsideRouteSpike\bin\ClientsideRouteSpike.dll
+C:\Development\GitHub\ClientsideRouteSpike\ClientsideRouteSpike\bin\ClientsideRouteSpike.pdb
+C:\Development\GitHub\ClientsideRouteSpike\ClientsideRouteSpike\bin\EntityFramework.dll
+C:\Development\GitHub\ClientsideRouteSpike\ClientsideRouteSpike\bin\EntityFramework.xml
+C:\Development\GitHub\ClientsideRouteSpike\ClientsideRouteSpike\obj\Debug\ResolveAssemblyReference.cache
+C:\Development\GitHub\ClientsideRouteSpike\ClientsideRouteSpike\obj\Debug\ClientsideRouteSpike.dll
+C:\Development\GitHub\ClientsideRouteSpike\ClientsideRouteSpike\obj\Debug\ClientsideRouteSpike.pdb

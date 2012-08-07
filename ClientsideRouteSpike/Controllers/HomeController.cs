@@ -19,5 +19,10 @@ namespace ClientsideRouteSpike.Controllers
         {
             return View();
         }
+
+        public ActionResult Backbone()
+        {
+            return View();
+        }
     }
 }

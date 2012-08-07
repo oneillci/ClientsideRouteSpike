@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using ClientsideRouteSpike.Models;
 
 namespace ClientsideRouteSpike.Controllers
 {
@@ -22,7 +23,7 @@ namespace ClientsideRouteSpike.Controllers
 
         public ActionResult Backbone()
         {
-            return View();
+            return View(new ParkingPermit());
         }
     }
 }

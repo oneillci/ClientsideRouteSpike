@@ -1,82 +1,236 @@
 ﻿@model ClientsideRouteSpike.Models.ParkingPermit
 
 @{
-    ViewBag.Title = "Backbone2";
+    ViewBag.Title = "Backbone";
+    Model.Step = "step1";
 }
+<script type="text/javascript">
 
-<h2>Backbone2</h2>
+    $(function() {
+        (function($) {
+            var parkingPermit = {
+                acceptsTerms: ko.observable(@Model.AcceptsTerms.ToString().ToLower()),
+                firstName: ko.observable("@Model.FirstName"),
+                lastName: ko.observable("@Model.LastName"),
+                email: ko.observable("@Model.Email"),
+                number: ko.observable("@Model.Number"),
+                street: ko.observable("@Model.Street"),
+                suburb: ko.observable("@Model.Suburb"),
+                step: ko.observable("@Model.Step")
+            };
 
-<script src="@Url.Content("~/Scripts/jquery.validate.min.js")" type="text/javascript"></script>
-<script src="@Url.Content("~/Scripts/jquery.validate.unobtrusive.min.js")" type="text/javascript"></script>
-<script src="../../Scripts/underscore.js" type="text/javascript"></script>
-<script src="../../Scripts/backbone.js" type="text/javascript"></script>
+            ko.applyBindings(parkingPermit);
 
-@using (Html.BeginForm()) {
-    @Html.ValidationSummary(true)
-    <fieldset>
-        <legend>ParkingPermit</legend>
+            function validateStep(selector) {
+                var valid = true,
+                    $form = $("form");
+                $form.removeData('validator');
+                $form.removeData('unobtrusiveValidation');
+                $.validator.unobtrusive.parse($form);
+                var validator = $("form").validate();
 
-        <div class="editor-label">
-            @Html.LabelFor(model => model.AcceptsTerms)
-        </div>
-        <div class="editor-field">
-            @Html.EditorFor(model => model.AcceptsTerms)
-            @Html.ValidationMessageFor(model => model.AcceptsTerms)
-        </div>
+                $(selector).find('input').each(function() {
+                    if (!validator.element(this)) {
+                        valid = false;
+                    }
+                });
+                return valid;
+            }
 
-        <div class="editor-label">
-            @Html.LabelFor(model => model.FirstName)
-        </div>
-        <div class="editor-field">
-            @Html.EditorFor(model => model.FirstName)
-            @Html.ValidationMessageFor(model => model.FirstName)
-        </div>
+            var StateModel = Backbone.Model.extend({
+                defaults: { state: parkingPermit.step() }
+            });
 
-        <div class="editor-label">
-            @Html.LabelFor(model => model.LastName)
-        </div>
-        <div class="editor-field">
-            @Html.EditorFor(model => model.LastName)
-            @Html.ValidationMessageFor(model => model.LastName)
-        </div>
+            function stepForward(selector) {
+//                var i = 0,
+//                    items = $(".wizard-content"),
+//                    count =  $(".wizard-content").length;
 
-        <div class="editor-label">
-            @Html.LabelFor(model => model.Email)
-        </div>
-        <div class="editor-field">
-            @Html.EditorFor(model => model.Email)
-            @Html.ValidationMessageFor(model => model.Email)
-        </div>
+//                while (parseInt($(selector).css('left').replace( /[^-\d\.]/g , '')) > 0) {
+//                    for (; i < count; i++) {
+//                        var newLeft = ($(items[i]).css('left').replace( /[^-\d\.]/g , '') - 1000) + "px";
+//                        $(items[i]).animate({ left: newLeft }, 200);
+//                    }
+//                }
 
-        <div class="editor-label">
-            @Html.LabelFor(model => model.Number)
-        </div>
-        <div class="editor-field">
-            @Html.EditorFor(model => model.Number)
-            @Html.ValidationMessageFor(model => model.Number)
-        </div>
+                $(".wizard-content").each(function() {
+                    var newLeft = ($(this).css('left').replace( /[^-\d\.]/g , '') - 1000) + "px";
+                    $(this).animate({ left: newLeft }, 200);
+                });
+            }
 
-        <div class="editor-label">
-            @Html.LabelFor(model => model.Street)
-        </div>
-        <div class="editor-field">
-            @Html.EditorFor(model => model.Street)
-            @Html.ValidationMessageFor(model => model.Street)
-        </div>
+            var WizardView = Backbone.View.extend({
+                model: new StateModel(),
 
-        <div class="editor-label">
-            @Html.LabelFor(model => model.Suburb)
-        </div>
-        <div class="editor-field">
-            @Html.EditorFor(model => model.Suburb)
-            @Html.ValidationMessageFor(model => model.Suburb)
+                initialize: function(options) {
+                    this.model.bind("change", this.render, this);
+                    this.parkingPermit = options.parkingPermit;
+                    this.router = options.router;
+                    this.render();
+                },
+
+                render: function() {
+                    switch (this.model.get("state")) {
+                    case "start":
+                    case "terms":
+                        var step1 = new TermsView({ el: $("#content-holder"), router:this.router,  parkingPermit: this.parkingPermit });
+                        break;
+                    case "customer":
+                        var step2 = new CustomerView({ el: $("#content-holder"), router:this.router, parkingPermit: this.parkingPermit });
+                        break;
+                    case "address":
+                        var step3 = new AddressView({ el: $("#content-holder"), router:this.router, parkingPermit: this.parkingPermit });
+                        break;
+                    }
+                }
+            });
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /// View that contains the Terms & conditions
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            var TermsView = Backbone.View.extend({
+                template: Handlebars.compile($('#step1-template').html()),
+
+                events: {
+                    'click input#step2': 'goToStep2'
+                },
+
+                initialize: function(options) {
+                    _.bindAll(this, 'render'); // fixes loss of context for 'this' within methods
+                    this.router = options.router;
+                    this.parkingPermit = options.parkingPermit;
+                    this.render(); // Render on initialise
+                },
+
+                render: function() {
+                    $('.wizard-content').css('left', '');
+                    //$(this.el).html(this.template());
+                },
+
+                goToStep2: function() {
+                    if (validateStep('#terms')) {
+                        //this.wizard.model.set("state", "customer");
+                        this.router.navigate("/step2", true);
+                    }
+                }
+            });
+
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /// View that contains the Customer inputs
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            var CustomerView = Backbone.View.extend({
+
+                events: {
+                    'click input#step3': 'goToStep3'
+                },
+
+                initialize: function(options) {
+                    _.bindAll(this, 'render'); // fixes loss of context for 'this' within methods
+                    this.router = options.router;
+                    this.parkingPermit = options.parkingPermit;
+                    this.render(); // Render on initialise
+                },
+
+                render: function() {
+                    //$(this.el).html(this.template());
+                    stepForward();
+                },
+
+                goToStep3: function() {
+                    if (validateStep('#customer')) {
+                        //this.wizard.model.set("state", "address");
+                        this.router.navigate("/step3", true);
+                    }
+                }
+            });
+
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /// View that contains the Address inputs
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            var AddressView = Backbone.View.extend({
+
+                initialize: function(options) {
+                    _.bindAll(this, 'render'); // fixes loss of context for 'this' within methods
+                    this.router = options.router;
+                    this.parkingPermit = options.parkingPermit;
+                    this.render(); // Render on initialise
+                },
+
+                render: function() {
+                    //$(this.el).html(this.template());
+                    stepForward();
+                }
+            });
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /// Define our routes
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
+
+            var AppRouter = Backbone.Router.extend({
+                routes: {
+                    "": "start",
+                    "step1": "termsstep",
+                    "step2": "customerstep",
+                    "step3": "addressstep"
+                },
+
+//            start: function() {
+//                wizard.model.set("state", "start");
+//            },
+
+                termsstep: function() {
+                    wizard.model.set("state", "terms");
+                },
+
+                customerstep: function() {
+                    wizard.model.set("state", "customer");
+                },
+
+                addressstep: function() {
+                    wizard.model.set("state", "address");
+                }
+            });
+
+            // Instantiate the router & wizard view (defaults to displaying terms first)
+            var app_router = new AppRouter(),
+                wizard = new WizardView({ router: app_router, parkingPermit: parkingPermit });
+
+            // Start the history engine
+            Backbone.history.start({ pushState: false });
+            app_router.navigate("@Model.Step", true); // Ensure the url matches the selected step
+        })(jQuery);
+    });
+</script>
+
+<h2>Backbone</h2>
+
+
+
+@using(Html.BeginForm())
+{
+    @Html.ValidationSummary(false)
+    <div class="container">
+        <div id="content-holder">
+            @Html.Partial("_Terms")
+
+            @Html.Partial("_Customer")
+
+            @Html.Partial("_Address")
+           
         </div>
 
         <p>
             <input type="submit" value="Create" />
         </p>
-    </fieldset>
-}
+
+    </div>
+}    
+
 
 <div>
     @Html.ActionLink("Back to List", "Index")
